@@ -102,7 +102,7 @@ router.get('/', passport.authenticate('jwt', {session: false}), (req, res)=>{
 })
 
 //Выйти из уч. записи
-router.post('/logout', (req, res)=>{
+router.post('/logout', passport.authenticate('jwt', {session: false}), (req, res)=>{
         try{
             req.logout();   
             res.send('Вы успешно вышли')
@@ -123,7 +123,7 @@ router.get('/:id', (req, res)=>{
             if(!doc) res.status(200).send('Запись не найдена');
             if(doc){
                 if(req.user?.nickname){
-                    User.findOneAndUpdate({nickname: id}, {$addToSet: {visitors: req.user.nickname}}, async (err, doc)=>{
+                    User.findOneAndUpdate({nickname: id}, {$addToSet: {visitors: req?.user?.nickname}}, async (err, doc)=>{
                         if(err) console.log(err);
                         if(!doc) console.log('Запись не найдена');
                         if(doc){
@@ -137,7 +137,7 @@ router.get('/:id', (req, res)=>{
     }
 })
 
-router.get('/isFollowed/:id', async(req, res)=>{
+router.get('/isFollowed/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
 
@@ -155,7 +155,7 @@ router.get('/isFollowed/:id', async(req, res)=>{
     }
 })
 
-router.get('/setFollow/:id', async(req, res)=>{
+router.get('/setFollow/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
 
@@ -177,7 +177,7 @@ router.get('/setFollow/:id', async(req, res)=>{
     }
 })
 
-router.get('/setUnFollow/:id', async(req, res)=>{
+router.get('/setUnFollow/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
 
@@ -201,7 +201,7 @@ router.get('/setUnFollow/:id', async(req, res)=>{
 
 //---------------------------ПРОФИЛЬ-------------------------------------
 
-router.post('/change_avatar', MulterImage.single('image'),  async (req, res)=>{
+router.post('/change_avatar', passport.authenticate('jwt', {session: false}), MulterImage.single('image'),  async (req, res)=>{
     User.findOne({nickname: req.user.nickname}, async (err, doc)=>{
         if(err) return console.log(err);
         if(!doc) return res.send('Запись не найдена');
@@ -231,7 +231,7 @@ router.post('/change_avatar', MulterImage.single('image'),  async (req, res)=>{
     
 })
 
-router.post('/change_about',  async (req, res)=>{
+router.post('/change_about', passport.authenticate('jwt', {session: false}), async (req, res)=>{
     User.updateOne({nickname: req.user.nickname},{$set: {about: req.body.about}}, async (err, doc)=>{
         if(err)  res.status(404).send(err);
         if(!doc) res.status(400).send('Запись не найдена');
