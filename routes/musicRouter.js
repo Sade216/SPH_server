@@ -11,7 +11,7 @@ const User = require('../models/userModel.js');
 
 const {isRole} = require('../middlewares/auth')
 
-router.use((req, res, next) => {
+router.use(passport.authenticate('jwt', {session: false}),(req, res, next) => {
     next();
 });
 
@@ -87,22 +87,22 @@ router.post('/deleteTrack', async(req, res)=>{
     else{
         let trackID = req.body.trackID
         Music.deleteOne({trackID: trackID}, async(err, doc)=>{
-            console.log(err)
             console.log('Delete Track')
             User.findOneAndUpdate({nickname: req.user.nickname}, {$pull: {trackList: trackID}}, async (err, doc)=>{
                 if(err) console.log(err);
                 if(!doc) console.log('Запись не найдена');
                 if(doc){
-                    return res.status(200).send(false)
+                    try{
+                        await cloudinary.uploader.destroy(trackID, {resource_type: 'video'})
+                        await cloudinary.uploader.destroy(req.body.imageID)
+                    }
+                    catch(e){
+
+                    }
+                    return res.status(200).send('Вы удалили свой трек(')
                 }
             })
-            try{
-                await cloudinary.uploader.destroy(trackID, {resource_type: 'video'})
-                await cloudinary.uploader.destroy(req.body.imageID)
-            }
-            catch(e){
-
-            }
+            
         })
         
     }

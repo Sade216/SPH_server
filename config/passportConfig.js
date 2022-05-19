@@ -18,7 +18,6 @@ module.exports = function(passport){
             if (err) return done(null, false)
             if (!user) return done(null, false);
             if(user){
-                console.log(user.nickname)
                 return done(null, user)
             }
         })

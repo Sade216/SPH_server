@@ -32,6 +32,8 @@ require('./config/passportConfig')(passport);
 
 const PORT = process.env.PORT || 5000;
 
+var user
+
 const app = require('express')()
     .use(sessionMiddleware)
     .use(passport.initialize())
@@ -53,7 +55,7 @@ const app = require('express')()
     .use('/api/news', newsRouter)
     .use('/api/music', musicRouter)
 
-    .use('/api/chat/rooms', async(req, res)=>{
+    .use('/api/chat/', async(req, res)=>{
         res.send(rooms)
     })
 
@@ -85,13 +87,8 @@ io.use(wrap(passport.session({
     resave: true,
     saveUninitialized: true,
 })));
-
 io.use((socket, next) => {
-  if (socket.request.user) {
-    next();
-  } else {
-    next(new Error('unauthorized'))
-  }
+    next()
 });
 
 //functions socketIO
@@ -104,6 +101,9 @@ async function getRoomMessages(room){
 }
 
 io.on('connect', (socket) => {
+    const session = socket.request.session;
+    session.socketId = socket.id;
+    session.save();
     //user stats
     socket.on('new-user', async() => {
         const members = await User.find({})
@@ -130,7 +130,5 @@ io.on('connect', (socket) => {
         socket.emit('whoami', socket.request.user)
     })
 
-    const session = socket.request.session;
-    session.socketId = socket.id;
-    session.save();
+    
 });

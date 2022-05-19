@@ -7,7 +7,7 @@ const User = require('../models/userModel.js');
 
 const {isRole} = require('../middlewares/auth.js')
 
-router.use((req, res, next) => {
+router.use(passport.authenticate('jwt', {session: false}), (req, res, next) => {
     next();
 });
 
