@@ -57,19 +57,17 @@ const app = require('express')()
         res.send(rooms)
     })
 
-    
+    .listen(PORT, ()=>{
+        console.log('Server Has Started on PORT ' + PORT)
+    })
 
-server = require('http').createServer(app);
 
-server.listen(PORT, ()=>{
-    console.log('Server Has Started on PORT ' + PORT)
-});
 //Chat
 
 
 let rooms = ['general']
 
-var io = require('socket.io')(server, {
+var io = require('socket.io')(app, {
     cors: {
         origin: true,
         // origin: process.env.CLIENT_URL,
