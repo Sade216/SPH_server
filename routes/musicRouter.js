@@ -11,7 +11,7 @@ const User = require('../models/userModel.js');
 
 const {isRole} = require('../middlewares/auth')
 
-router.use(passport.authenticate('jwt', {session: false}),(req, res, next) => {
+router.use((req, res, next) => {
     next();
 });
 
@@ -79,7 +79,7 @@ router.get('/getTrackData/:id', async(req, res)=>{
     }
 })
 
-router.post('/deleteTrack', async(req, res)=>{
+router.post('/deleteTrack', passport.authenticate('jwt', {session: false}), async(req, res)=>{
 
     if(req?.user?.nickname !== req?.body?.author){
         return res.status(400).send('Вы не владелец')
@@ -109,6 +109,7 @@ router.post('/deleteTrack', async(req, res)=>{
 })
 
 router.post('/addTrack', 
+	passport.authenticate('jwt', {session: false}),
     MulterTrack.fields([{name: 'track', maxCount: 1}, {name: 'image', maxCount: 1}]), 
     isRole(['member', 'editor','admin']), 
     async (req, res)=>{

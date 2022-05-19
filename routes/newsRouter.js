@@ -7,7 +7,7 @@ const User = require('../models/userModel.js');
 
 const {isRole} = require('../middlewares/auth.js')
 
-router.use(passport.authenticate('jwt', {session: false}), (req, res, next) => {
+router.use((req, res, next) => {
     next();
 });
 
@@ -48,7 +48,7 @@ router.get('/getOne', (req, res)=>{
 })
 //------------------------LIKE & COMMENTS--------------------------------
 
-router.post('/setLike', isRole(['member' , 'owner']), (req, res)=>{
+router.post('/setLike', passport.authenticate('jwt', {session: false}), isRole(['member' , 'owner']), (req, res)=>{
     const id = req.body.id
     News.findOneAndUpdate({ _id: id }, {$addToSet: {likes: req.user.nickname}}, {} ,(err, doc)=>{
         if(err) res.status(404).send(err)
@@ -61,7 +61,7 @@ router.post('/setLike', isRole(['member' , 'owner']), (req, res)=>{
 
 //------------------------ADMINKA--------------------------------
 //Создание поста
-router.post('/create', isRole(['owner']), (req, res)=>{
+router.post('/create', passport.authenticate('jwt', {session: false}), isRole(['owner']), (req, res)=>{
     News.find({title}, async(err, doc)=>{
         if(err) res.status(404).send(err)
         if(doc) res.status(400).send('Новость с таким же названием уже существует')
@@ -79,10 +79,10 @@ router.post('/create', isRole(['owner']), (req, res)=>{
     })
 })
 //Удаление поста
-router.delete('/:id', isRole(['owner']), (req, res)=>{
+router.delete('/:id', passport.authenticate('jwt', {session: false}), isRole(['owner']), (req, res)=>{
 })
 //Обновление поста
-router.put('/:id', isRole(['owner']), (req, res)=>{
+router.put('/:id', passport.authenticate('jwt', {session: false}), isRole(['owner']), (req, res)=>{
 })
 
 module.exports = router;
