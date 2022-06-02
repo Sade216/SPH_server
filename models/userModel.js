@@ -25,11 +25,11 @@ const userSchema = new Mongoose.Schema({
         unique: true,
         trim: true,
     },
+    password: reqString,
     about: {
         type: String,
-        default: '',
+        default: null,
     },
-    password: reqString,
     trackList: [String],
     pref_genres: [String],
     visitors: [String],
@@ -42,19 +42,19 @@ const userSchema = new Mongoose.Schema({
     },
     avatarURL: {
         type: String,
-        default: 'none'
+        default: null
     },
     avatarID: {
         type: String,
-        default: 'none'
+        default: null
     },
     backgoundURL: {
         type: String,
-        default: 'none'
+        default: null
     },
     backgoundID: {
         type: String,
-        default: 'none'
+        default: null
     },
     lastLogin: Date,
     posts: [postsSchema],

@@ -14,7 +14,7 @@ const {isRole} = require('../middlewares/auth')
 router.use((req, res, next) => {
     next();
 });
-
+//Получения всей музыки
 router.get('/getAll', (req,res)=>{
     let { size, page } = req.query
 
@@ -45,7 +45,7 @@ router.get('/getAll', (req,res)=>{
         else res.status(400).send('Что-то пошло не так (')
     })
 })
-
+//Получения коллекции
 router.get('/getCollection/:id', async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
@@ -60,7 +60,21 @@ router.get('/getCollection/:id', async(req, res)=>{
         })
     }
 })
+//Получение коллекции для авторизованного пользователя
+router.get('/getCollection', passport.authenticate('jwt', {session: false}),async(req, res)=>{
+    if(req.user.nickname){
 
+        User.findOne({nickname: req.user.nickname}, async(err, doc)=>{
+            if(err)  res.status(404).send(err);
+            if(!doc) res.status(400).send('Запись не найдена');
+            if(doc){
+                res.status(200).send(doc.trackList)
+                
+            }
+        })
+    }
+})
+//Получения данных о треке
 router.get('/getTrackData/:id', async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
@@ -78,38 +92,8 @@ router.get('/getTrackData/:id', async(req, res)=>{
         })
     }
 })
-
-router.post('/deleteTrack', passport.authenticate('jwt', {session: false}), async(req, res)=>{
-
-    if(req?.user?.nickname !== req?.body?.author){
-        return res.status(400).send('Вы не владелец')
-    }
-    else{
-        let trackID = req.body.trackID
-        Music.deleteOne({trackID: trackID}, async(err, doc)=>{
-            console.log('Delete Track')
-            User.findOneAndUpdate({nickname: req.user.nickname}, {$pull: {trackList: trackID}}, async (err, doc)=>{
-                if(err) console.log(err);
-                if(!doc) console.log('Запись не найдена');
-                if(doc){
-                    try{
-                        await cloudinary.uploader.destroy(trackID, {resource_type: 'video'})
-                        await cloudinary.uploader.destroy(req.body.imageID)
-                    }
-                    catch(e){
-
-                    }
-                    return res.status(200).send('Вы удалили свой трек(')
-                }
-            })
-            
-        })
-        
-    }
-})
-
-router.post('/addTrack', 
-	passport.authenticate('jwt', {session: false}),
+//Добавление
+router.post('/addTrack', passport.authenticate('jwt', {session: false}),
     MulterTrack.fields([{name: 'track', maxCount: 1}, {name: 'image', maxCount: 1}]), 
     isRole(['member', 'editor','admin']), 
     async (req, res)=>{
@@ -156,7 +140,7 @@ router.post('/addTrack',
                 imageID: imagePublicID,
                 imageURL: imageSecureURL, 
                 author: req.user.nickname,
-                title: req.body.title,
+                title: req.body.title ? req.body.title : 'Undefined',
                 tags: req.body.tags,
                 desc: req.body.desc,
             })
@@ -172,10 +156,68 @@ router.post('/addTrack',
                     status += 'Обложка установлена'
                 }
         })
-        res.status(200).send(status)
+        return res.status(200).send(status)
     } catch (e) {
         console.log(e)
     }
+})
+//Удаление
+router.post('/deleteTrack', passport.authenticate('jwt', {session: false}), async(req, res)=>{
+
+    if(req?.user?.nickname !== req?.body?.author){
+        return res.status(400).send('Вы не владелец')
+    }
+    else{
+        let trackID = req.body.trackID
+        Music.deleteOne({trackID: trackID}, async(err, doc)=>{
+            console.log('Delete Track')
+            User.findOneAndUpdate({nickname: req.user.nickname}, {$pull: {trackList: trackID}}, async (err, doc)=>{
+                if(err) console.log(err);
+                if(!doc) console.log('Запись не найдена');
+                if(doc){
+                    try{
+                        await cloudinary.uploader.destroy(trackID, {resource_type: 'video'})
+                        await cloudinary.uploader.destroy(req.body.imageID)
+                    }
+                    catch(e){
+
+                    }
+                    return res.status(200).send('Вы удалили свой трек(')
+                }
+            })
+            
+        })
+        
+    }
+})
+//Изменение
+router.post('/changeTrackInfo', passport.authenticate('jwt', {session: false}), async(req, res)=>{
+
+    // if(req?.user?.nickname !== req?.body?.author){
+    //     return res.status(400).send('Вы не владелец')
+    // }
+    // else{
+    //     let trackID = req.body.trackID
+    //     Music.deleteOne({trackID: trackID}, async(err, doc)=>{
+    //         console.log('Delete Track')
+    //         User.findOneAndUpdate({nickname: req.user.nickname}, {$pull: {trackList: trackID}}, async (err, doc)=>{
+    //             if(err) console.log(err);
+    //             if(!doc) console.log('Запись не найдена');
+    //             if(doc){
+    //                 try{
+    //                     await cloudinary.uploader.destroy(trackID, {resource_type: 'video'})
+    //                     await cloudinary.uploader.destroy(req.body.imageID)
+    //                 }
+    //                 catch(e){
+
+    //                 }
+    //                 return res.status(200).send('Вы удалили свой трек(')
+    //             }
+    //         })
+            
+    //     })
+        
+    // }
 })
 
 module.exports = router;

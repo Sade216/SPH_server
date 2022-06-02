@@ -21,7 +21,6 @@ require('dotenv').config();
 router.use((req, res, next) => {
     next();
 });
-
 //Логин
 router.post('/login', (req, res)=>{
     User.findOne({nickname: req.body.nickname}, (err, user)=>{
@@ -29,6 +28,9 @@ router.post('/login', (req, res)=>{
         if (!user) return console.log('Пользователь не найдей')
         bcrypt.compare(req.body.password, user.password, (err, result)=>{
             if (err) return console.log(err)
+            if (result === false){
+                return res.status(401).send('Пароль не верный')
+            }
             if (result === true){
                 const payload = user.toJSON()
 
@@ -61,7 +63,6 @@ router.post('/login', (req, res)=>{
     //     }
     // })
 })
-
 //Регистация
 router.post('/register', async (req, res)=>{
     const emailRegExp = RegExp('^[a-zA-Z0-9.!#$%&*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$')
@@ -95,12 +96,10 @@ router.post('/register', async (req, res)=>{
         return res.send(response)
     }
 })
-
 //Получение пользователя с сервера
 router.get('/', passport.authenticate('jwt', {session: false}), (req, res)=>{
     res.send(req.user)
 })
-
 //Выйти из уч. записи
 router.post('/logout', passport.authenticate('jwt', {session: false}), (req, res)=>{
         try{
@@ -112,7 +111,6 @@ router.post('/logout', passport.authenticate('jwt', {session: false}), (req, res
         }
 }
 );
-
 //---------------------------ПРОФИЛЬ(ЧУЖОЙ)-------------------------------------
 router.get('/:id', (req, res)=>{
     if(req.params.id){
@@ -136,7 +134,7 @@ router.get('/:id', (req, res)=>{
         })
     }
 })
-
+//Проверка подписан ли пользователь на другого пользователя
 router.get('/isFollowed/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
@@ -154,7 +152,7 @@ router.get('/isFollowed/:id', passport.authenticate('jwt', {session: false}), as
         }
     }
 })
-
+//Подписаться на пользователя
 router.get('/setFollow/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
@@ -176,7 +174,7 @@ router.get('/setFollow/:id', passport.authenticate('jwt', {session: false}), asy
         }
     }
 })
-
+//Отписаться от пользователя
 router.get('/setUnFollow/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
@@ -200,7 +198,7 @@ router.get('/setUnFollow/:id', passport.authenticate('jwt', {session: false}), a
 })
 
 //---------------------------ПРОФИЛЬ-------------------------------------
-
+//Поменять аватар
 router.post('/change_avatar', passport.authenticate('jwt', {session: false}), MulterImage.single('image'),  async (req, res)=>{
     User.findOne({nickname: req.user.nickname}, async (err, doc)=>{
         if(err) return console.log(err);
@@ -230,7 +228,7 @@ router.post('/change_avatar', passport.authenticate('jwt', {session: false}), Mu
     })
     
 })
-
+//Изменить содержимое поля about
 router.post('/change_about', passport.authenticate('jwt', {session: false}), async (req, res)=>{
     User.updateOne({nickname: req.user.nickname},{$set: {about: req.body.about}}, async (err, doc)=>{
         if(err)  res.status(404).send(err);

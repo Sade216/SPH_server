@@ -47,7 +47,6 @@ router.get('/getOne', (req, res)=>{
 
 })
 //------------------------LIKE & COMMENTS--------------------------------
-
 router.post('/setLike', passport.authenticate('jwt', {session: false}), isRole(['member' , 'owner']), (req, res)=>{
     const id = req.body.id
     News.findOneAndUpdate({ _id: id }, {$addToSet: {likes: req.user.nickname}}, {} ,(err, doc)=>{
@@ -58,8 +57,27 @@ router.post('/setLike', passport.authenticate('jwt', {session: false}), isRole([
         }
     });
 })
-
-//------------------------ADMINKA--------------------------------
+router.post('/setUnLike', passport.authenticate('jwt', {session: false}), isRole(['member' , 'owner']), (req, res)=>{
+    const id = req.body.id
+    // News.findOneAndUpdate({ _id: id }, {$addToSet: {likes: req.user.nickname}}, {} ,(err, doc)=>{
+    //     if(err) res.status(404).send(err)
+    //     if(!doc) res.status(404).send('Запись не найдена')
+    //     if(doc){
+    //         res.status(200).send('ok')
+    //     }
+    // });
+})
+router.post('/addComment', passport.authenticate('jwt', {session: false}), isRole(['member' , 'owner']), (req, res)=>{
+    const id = req.body.id
+    News.findOneAndUpdate({ _id: id }, {$addToSet: {likes: req.user.nickname}}, {} ,(err, doc)=>{
+        if(err) res.status(404).send(err)
+        if(!doc) res.status(404).send('Запись не найдена')
+        if(doc){
+            res.status(200).send('ok')
+        }
+    });
+})
+//------------------------Админ-панель--------------------------------
 //Создание поста
 router.post('/create', passport.authenticate('jwt', {session: false}), isRole(['owner']), (req, res)=>{
     News.find({title}, async(err, doc)=>{
@@ -80,9 +98,11 @@ router.post('/create', passport.authenticate('jwt', {session: false}), isRole(['
 })
 //Удаление поста
 router.delete('/:id', passport.authenticate('jwt', {session: false}), isRole(['owner']), (req, res)=>{
+    const asd = [];
 })
 //Обновление поста
 router.put('/:id', passport.authenticate('jwt', {session: false}), isRole(['owner']), (req, res)=>{
+    const asd = [];
 })
 
 module.exports = router;
