@@ -178,7 +178,6 @@ router.post('/deleteTrack', passport.authenticate('jwt', {session: false}), asyn
     else{
         let trackID = req.body.trackID
         Music.deleteOne({trackID: trackID}, async(err, doc)=>{
-            console.log('Delete Track')
             User.findOneAndUpdate({nickname: req.user.nickname}, {$pull: {trackList: trackID}}, async (err, doc)=>{
                 if(err) console.log(err);
                 if(!doc) console.log('Запись не найдена');
