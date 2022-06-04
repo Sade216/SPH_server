@@ -16,31 +16,31 @@ router.use((req, res, next) => {
 });
 //Получения всей музыки
 router.get('/getAll', (req,res)=>{
-    let { size, page } = req.query
+    let { limit, page, sort = -1 } = req.query
 
-    if (!size) size = 5;
+    if (!limit) limit = 5;
     if (!page) page = 1;
 
     if(page < 1) return res.status(404).send('Неверная страница');
 
-    const limit = parseInt(size)
-    const skip = (page - 1) * size;
+    const size = parseInt(limit)
+    const skip = (page - 1) * limit;
 
     let musicCount
 
     Music.count({}, async (err, count)=>{
         if(count){
             musicCount = count
-            Music.find({}, (err, doc)=>{
+            Music.find({}, null, {sort: {createdAt: -1}}, (err, doc)=>{
                 if(err) res.status(404).send(err)
                 if(!doc) res.status(404).send('Запись не найдена (')
                 if(doc) {
                     res.status(200).send({
-                        pages: Math.ceil(musicCount/size),
+                        pages: Math.ceil(musicCount/limit),
                         data: doc,
                     })
                 }
-            }).limit(limit).skip(skip)
+            }).limit(size).skip(skip)
         }
         else res.status(400).send('Что-то пошло не так (')
     })
@@ -97,30 +97,37 @@ router.post('/addTrack', passport.authenticate('jwt', {session: false}),
     MulterTrack.fields([{name: 'track', maxCount: 1}, {name: 'image', maxCount: 1}]), 
     isRole(['member', 'editor','admin']), 
     async (req, res)=>{
-
+    let status = {
+        trackStatus: false,
+        pictureStatus: false,
+        trackUploadStatus: false,
+        pictureUploadStatus: false,
+    }
+    
     const TrackRegExp = RegExp('\.(mp3|wav)$')
     const ImageRegExp = RegExp('\.(jpg|jpeg|png)$')
     let resultTrack
     let resultImage
     try{
         if(req.files['track'][0].originalname.match(TrackRegExp)){
-            console.log('track')
             resultTrack = await cloudinary.uploader.upload(req.files['track'][0].path, {resource_type: 'video'})
+            status.trackStatus = true
         }
     }
     catch(e){
+        status.trackStatus = false
         return res.status(400).send('Трека нет')
     }
     try{
         if(req.files['image'][0].originalname.match(ImageRegExp)){
-            console.log('image')
             resultImage = await cloudinary.uploader.upload(req.files['image'][0].path)
+            status.pictureStatus = true
         }
     }
     catch(e){
+        status.pictureStatus = false
         console.log('Без картинки')
     }
-    let status = ''
     let imagePublicID
     let imageSecureURL
     if(resultImage === undefined) {
@@ -145,7 +152,7 @@ router.post('/addTrack', passport.authenticate('jwt', {session: false}),
                 desc: req.body.desc,
             })
             await newTrack.save();
-            status += 'Трек добавлен '
+            status.trackUploadStatus = true
         })
         User.findOneAndUpdate({nickname: req.user.nickname},
             {$addToSet : { trackList: resultTrack.public_id}}, 
@@ -153,9 +160,10 @@ router.post('/addTrack', passport.authenticate('jwt', {session: false}),
                 if(err) return res.status(404).send(err);
                 if(!doc) return res.status(400).send('Запись не найдена');
                 if(doc){
-                    status += 'Обложка установлена'
+                    status.pictureUploadStatus = true
                 }
-        })
+            }
+        )
         return res.status(200).send(status)
     } catch (e) {
         console.log(e)
