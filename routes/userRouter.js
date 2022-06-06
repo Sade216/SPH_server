@@ -118,7 +118,7 @@ router.get('/:id', (req, res)=>{
 
         User.findOne({nickname: id}, async(err, doc)=>{
             if(err)  res.status(404).send(err);
-            if(!doc) res.status(200).send('Запись не найдена');
+            if(!doc) res.status(400).send('Запись не найдена');
             if(doc){
                 if(req.user?.nickname){
                     User.findOneAndUpdate({nickname: id}, {$addToSet: {visitors: req?.user?.nickname}}, async (err, doc)=>{
@@ -134,6 +134,7 @@ router.get('/:id', (req, res)=>{
         })
     }
 })
+
 //Проверка подписан ли пользователь на другого пользователя
 router.get('/isFollowed/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
     if(req.params.id){

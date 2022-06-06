@@ -50,7 +50,7 @@ router.get('/getCollection/:id', async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
 
-        User.findOne({nickname: id}, async(err, doc)=>{
+        User.findOne({nickname: id}, null, {sort: {createdAt: -1}}, async(err, doc)=>{
             if(err)  res.status(404).send(err);
             if(!doc) res.status(400).send('Запись не найдена');
             if(doc){
@@ -64,7 +64,7 @@ router.get('/getCollection/:id', async(req, res)=>{
 router.get('/getCollection', passport.authenticate('jwt', {session: false}),async(req, res)=>{
     if(req.user.nickname){
 
-        User.findOne({nickname: req.user.nickname}, async(err, doc)=>{
+        User.findOne({nickname: req.user.nickname}, null, {sort: {createdAt: -1}}, async(err, doc)=>{
             if(err)  res.status(404).send(err);
             if(!doc) res.status(400).send('Запись не найдена');
             if(doc){
