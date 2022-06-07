@@ -8,10 +8,8 @@ const jwt = require('jsonwebtoken')
 
 const {updateData} = require('../middlewares/auth.js')
 
-
 const cloudinary = require('../config/cloudinaryConfig') 
 const {MulterImage} = require('../config/multer')
-
 
 require('dotenv').config();
 
@@ -102,15 +100,14 @@ router.get('/', passport.authenticate('jwt', {session: false}), (req, res)=>{
 })
 //Выйти из уч. записи
 router.post('/logout', passport.authenticate('jwt', {session: false}), (req, res)=>{
-        try{
-            req.logout();   
-            res.send('Вы успешно вышли')
-        }
-        catch(err){
-            res.send(err)
-        }
-}
-);
+    try{
+        req.logout();   
+        res.send('Вы успешно вышли')
+    }
+    catch(err){
+        res.send(err)
+    }
+})
 //---------------------------ПРОФИЛЬ(ЧУЖОЙ)-------------------------------------
 router.get('/:id', (req, res)=>{
     if(req.params.id){
@@ -134,7 +131,6 @@ router.get('/:id', (req, res)=>{
         })
     }
 })
-
 //Проверка подписан ли пользователь на другого пользователя
 router.get('/isFollowed/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
     if(req.params.id){
