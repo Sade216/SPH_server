@@ -147,7 +147,7 @@ router.post('/addTrack', passport.authenticate('jwt', {session: false}),
                 imageID: imagePublicID,
                 imageURL: imageSecureURL, 
                 author: req.user.nickname,
-                title: req.body.title ? req.body.title : 'Undefined',
+                title: req.body.title ? req.body.title : null,
                 tags: req.body.tags,
                 desc: req.body.desc,
             })

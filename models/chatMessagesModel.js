@@ -5,6 +5,8 @@ const ChatMessagesSchema = new Mongoose.Schema({
     to: String,
     socketID: String,
     content: String,
+    pinnedMusic: [],
+    pinnedImages: [],
 },{
     timestamps: true
 })

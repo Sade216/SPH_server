@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken')
 const {updateData} = require('../middlewares/auth.js')
 
 const cloudinary = require('../config/cloudinaryConfig') 
-const {MulterImage} = require('../config/multer')
+const {MulterImage, MulterTrack} = require('../config/multer')
 
 require('dotenv').config();
 
@@ -108,6 +108,97 @@ router.post('/logout', passport.authenticate('jwt', {session: false}), (req, res
         res.send(err)
     }
 })
+//---------------------------ПРОФИЛЬ-------------------------------------
+router.get('/getPosts', passport.authenticate('jwt', {session: false}), async(req, res)=>{
+    if(req.user?.nickname){
+        let { size, page } = req.query
+
+        if (!size) size = 10;
+        if (!page) page = 1;
+
+        if(page < 1) return res.status(404).send('Неверная страница');
+
+        const limit = parseInt(size)
+        const skip = (page - 1) * size;
+
+        User.findById(req.user._id ,async(err, doc)=>{
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(200).send('Запись не найдена');
+            if(doc){
+                let posts = doc.posts.slice(skip, limit + skip)
+                return res.status(200).send({
+                    pages: Math.ceil(doc.posts.length/size),
+                    data: posts,
+                })
+            }
+        })
+    }
+})
+//Создать пост
+router.post('/createPost', 
+passport.authenticate('jwt', {session: false}), 
+MulterTrack.fields([{name: 'track', maxCount: 1}, {name: 'image', maxCount: 1}]), 
+async(req, res)=>{
+    console.log(req.user.nickname)
+    console.log(req.body.text)
+    if(req.user?.nickname){
+        User.findOneAndUpdate({nickname: req.user.nickname}, {$push: {'posts': {text: req.body.text}}},async(err, doc)=>{
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(200).send('Запись не найдена');
+            if(doc){
+                console.log(doc.posts)
+                return res.status(200).send('Ok')
+            }
+        })
+    }
+})
+//Удалить пост
+router.get('/deletePost/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
+    if(req.user?.nickname){
+        console.log(req.body)
+        return res.status(200).send('Ok')
+    }
+})
+//Поменять аватар
+router.post('/change_avatar', passport.authenticate('jwt', {session: false}), MulterImage.single('image'),  async (req, res)=>{
+    User.findOne({nickname: req.user.nickname}, async (err, doc)=>{
+        if(err) return console.log(err);
+        if(!doc) return res.send('Запись не найдена');
+        if(doc){
+            try{
+                await cloudinary.uploader.destroy(req.user.avatarID)
+            }
+            catch(e){
+                console.log(e)
+            }
+            try{
+                const result = await cloudinary.uploader.upload(req.file.path)
+
+                User.updateOne({nickname: req.user.nickname},{avatarURL: result.secure_url, avatarID: result.public_id}, async (err, doc)=>{
+                    if(err) return res.status(404).send(err);
+                    if(!doc) return res.status(400).send('Запись не найдена');
+                    if(doc){
+                        return res.status(200).send('Фотография обновлена')
+                    }
+                })
+            }
+            catch(e){
+                console.log(e)
+            }
+        }
+    })
+    
+})
+//Изменить содержимое поля about
+router.post('/change_about', passport.authenticate('jwt', {session: false}), async (req, res)=>{
+    User.updateOne({nickname: req.user.nickname},{$set: {about: req.body.about}}, async (err, doc)=>{
+        if(err)  res.status(404).send(err);
+        if(!doc) res.status(400).send('Запись не найдена');
+
+        if(doc) res.status(200).send('Обновлено');
+    })
+    
+})
 //---------------------------ПРОФИЛЬ(ЧУЖОЙ)-------------------------------------
 router.get('/:id', (req, res)=>{
     if(req.params.id){
@@ -194,45 +285,4 @@ router.get('/setUnFollow/:id', passport.authenticate('jwt', {session: false}), a
     }
 })
 
-//---------------------------ПРОФИЛЬ-------------------------------------
-//Поменять аватар
-router.post('/change_avatar', passport.authenticate('jwt', {session: false}), MulterImage.single('image'),  async (req, res)=>{
-    User.findOne({nickname: req.user.nickname}, async (err, doc)=>{
-        if(err) return console.log(err);
-        if(!doc) return res.send('Запись не найдена');
-        if(doc){
-            try{
-                await cloudinary.uploader.destroy(req.user.avatarID)
-            }
-            catch(e){
-                console.log(e)
-            }
-            try{
-                const result = await cloudinary.uploader.upload(req.file.path)
-
-                User.updateOne({nickname: req.user.nickname},{avatarURL: result.secure_url, avatarID: result.public_id}, async (err, doc)=>{
-                    if(err) return res.status(404).send(err);
-                    if(!doc) return res.status(400).send('Запись не найдена');
-                    if(doc){
-                        return res.status(200).send('Фотография обновлена')
-                    }
-                })
-            }
-            catch(e){
-                console.log(e)
-            }
-        }
-    })
-    
-})
-//Изменить содержимое поля about
-router.post('/change_about', passport.authenticate('jwt', {session: false}), async (req, res)=>{
-    User.updateOne({nickname: req.user.nickname},{$set: {about: req.body.about}}, async (err, doc)=>{
-        if(err)  res.status(404).send(err);
-        if(!doc) res.status(400).send('Запись не найдена');
-
-        if(doc) res.status(200).send('Обновлено');
-    })
-    
-})
 module.exports = router;

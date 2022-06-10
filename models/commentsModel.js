@@ -8,10 +8,8 @@ const reqString = {
 const commentsSchema = Mongoose.Schema({
     author: reqString,
     text: reqString,
-    picture: {
-        type: String,
-        default: 'none'
-    }
+    pinnedMusic: [],
+    pinnedImages: [],
 },
 {
     timestamps: true

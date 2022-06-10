@@ -6,8 +6,9 @@ const reqString = {
 }
 
 const postsSchema = Mongoose.Schema({
-    author: reqString,
     text: reqString,
+    pinnedMusic: [],
+    pinnedImages: [],
 },
 {
     timestamps: true
