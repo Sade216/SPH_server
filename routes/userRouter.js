@@ -109,8 +109,10 @@ router.post('/logout', passport.authenticate('jwt', {session: false}), (req, res
     }
 })
 //---------------------------ПРОФИЛЬ-------------------------------------
-router.get('/getPosts', passport.authenticate('jwt', {session: false}), async(req, res)=>{
-    if(req.user?.nickname){
+router.get('/getPosts/:id', async(req, res)=>{
+    if(req.params.id){
+        const id = req.params.id
+
         let { size, page } = req.query
 
         if (!size) size = 10;
@@ -121,7 +123,7 @@ router.get('/getPosts', passport.authenticate('jwt', {session: false}), async(re
         const limit = parseInt(size)
         const skip = (page - 1) * size;
 
-        User.findById(req.user._id ,async(err, doc)=>{
+        User.findOne({nickname: id}, async(err, doc)=>{
             if(err)  return res.status(404).send(err);
             if(!doc) return res.status(200).send('Запись не найдена');
             if(doc){
@@ -200,13 +202,20 @@ router.post('/change_about', passport.authenticate('jwt', {session: false}), asy
     
 })
 //---------------------------ПРОФИЛЬ(ЧУЖОЙ)-------------------------------------
-router.get('/:id', (req, res)=>{
+router.get('/:id', function(req, res, next) {
+        passport.authenticate('jwt', function(err, user, info) {
+            if (err) { return next(err); }
+            if (!user) { return next(); }
+            req.login(user, next);
+        })(req, res, next);
+    }, 
+async (req, res)=>{
     if(req.params.id){
         const id = req.params.id
 
         User.findOne({nickname: id}, async(err, doc)=>{
-            if(err)  res.status(404).send(err);
-            if(!doc) res.status(400).send('Запись не найдена');
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(400).send('Запись не найдена');
             if(doc){
                 if(req.user?.nickname){
                     User.findOneAndUpdate({nickname: id}, {$addToSet: {visitors: req?.user?.nickname}}, async (err, doc)=>{
@@ -217,7 +226,7 @@ router.get('/:id', (req, res)=>{
                         }
                     })
                 }
-                res.status(200).send(doc)
+                return res.status(200).send(doc)
             }
         })
     }

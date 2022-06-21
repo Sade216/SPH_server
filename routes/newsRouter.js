@@ -47,25 +47,54 @@ router.get('/getOne', (req, res)=>{
 
 })
 //------------------------LIKE & COMMENTS--------------------------------
-router.post('/setLike', passport.authenticate('jwt', {session: false}), isRole(['member' , 'owner']), (req, res)=>{
+router.get('/isLikedNews/:id', passport.authenticate('jwt', {session: false}), isRole(['member', 'owner', 'admin']), async (req, res)=>{
+    if(req.params.id){
+        const id = req.params.id
+        News.findById(id, async (err, doc)=>{
+            if(err) return res.status(404).send(err)
+            if(!doc) return res.status(404).send('Запись не найдена')
+            if(doc){
+                if(doc.likes.includes(req.user.nickname)){
+                    return res.status(200).send({
+                        status: true,
+                        length: doc.likes.length
+                    })
+                }
+                else{
+                    return res.status(200).send({
+                        status: false,
+                        length: doc.likes.length
+                    })
+                }
+            }
+        })
+    }
+})
+router.post('/setLike', passport.authenticate('jwt', {session: false}), isRole(['member', 'owner', 'admin']), async (req, res)=>{
     const id = req.body.id
-    News.findOneAndUpdate({ _id: id }, {$addToSet: {likes: req.user.nickname}}, {} ,(err, doc)=>{
-        if(err) res.status(404).send(err)
-        if(!doc) res.status(404).send('Запись не найдена')
+    News.findByIdAndUpdate(id, {$addToSet: {likes: req.user.nickname}}, {new: true} ,(err, doc)=>{
+        if(err) return res.status(404).send(err)
+        if(!doc) return res.status(404).send('Запись не найдена')
         if(doc){
-            res.status(200).send('ok')
+            return res.status(200).send({
+                status: true,
+                length: doc.likes.length
+            })
         }
     });
 })
-router.post('/setUnLike', passport.authenticate('jwt', {session: false}), isRole(['member' , 'owner']), (req, res)=>{
+router.post('/setUnLike', passport.authenticate('jwt', {session: false}), isRole(['member', 'owner', 'admin']), async (req, res)=>{
     const id = req.body.id
-    // News.findOneAndUpdate({ _id: id }, {$addToSet: {likes: req.user.nickname}}, {} ,(err, doc)=>{
-    //     if(err) res.status(404).send(err)
-    //     if(!doc) res.status(404).send('Запись не найдена')
-    //     if(doc){
-    //         res.status(200).send('ok')
-    //     }
-    // });
+    News.findByIdAndUpdate(id, {$pull: {likes: req.user.nickname}}, {new: true} ,(err, doc)=>{
+        if(err) return res.status(404).send(err)
+        if(!doc) return res.status(404).send('Запись не найдена')
+        if(doc){
+            return res.status(200).send({
+                status: false,
+                length: doc.likes.length
+            })
+        }
+    });
 })
 router.post('/addComment', passport.authenticate('jwt', {session: false}), isRole(['member' , 'owner']), (req, res)=>{
     const id = req.body.id
