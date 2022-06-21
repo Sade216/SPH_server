@@ -172,10 +172,7 @@ router.post('/addTrack', passport.authenticate('jwt', {session: false}),
 //Удаление
 router.post('/deleteTrack', passport.authenticate('jwt', {session: false}), async(req, res)=>{
 
-    if(req?.user?.nickname !== req?.body?.author){
-        return res.status(400).send('Вы не владелец')
-    }
-    else{
+    if(req?.user?.nickname === req?.body?.author | req?.user?.role === 'admin'){
         let trackID = req.body.trackID
         Music.deleteOne({trackID: trackID}, async(err, doc)=>{
             User.findOneAndUpdate({nickname: req.user.nickname}, {$pull: {trackList: trackID}}, async (err, doc)=>{
@@ -194,7 +191,9 @@ router.post('/deleteTrack', passport.authenticate('jwt', {session: false}), asyn
             })
             
         })
-        
+    }
+    else{
+        return res.status(400).send('Вы не владелец')
     }
 })
 //Изменение
