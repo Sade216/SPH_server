@@ -3,7 +3,7 @@ const passport = require('passport');
 require('../config/passportConfig')(passport)
 
 const News = require('../models/newsModel.js');
-const User = require('../models/userModel.js');
+const {User} = require('../models/userModel.js');
 
 const {isRole} = require('../middlewares/auth.js')
 

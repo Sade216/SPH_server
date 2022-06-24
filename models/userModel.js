@@ -7,6 +7,7 @@ const reqString = {
 
 const postsSchema = Mongoose.Schema({
     text: reqString,
+    likes: [String],
     pinnedMusic: [],
     pinnedImages: [],
 },
@@ -14,6 +15,7 @@ const postsSchema = Mongoose.Schema({
     timestamps: true
 })
 
+const Post = Mongoose.model('posts', postsSchema)
 const userSchema = new Mongoose.Schema({
     nickname: {
         type: String,
@@ -63,6 +65,6 @@ const userSchema = new Mongoose.Schema({
 {
     timestamps: true
 })
-
-module.exports = Mongoose.model('user', userSchema);
+const User = Mongoose.model('user', userSchema)
+module.exports = {Post, User};
 

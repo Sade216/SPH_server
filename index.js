@@ -14,7 +14,7 @@ const userRouter = require('./routes/userRouter.js');
 const newsRouter = require('./routes/newsRouter.js');
 const musicRouter = require('./routes/musicRouter.js');
 
-const User = require('./models/userModel.js')
+const {User} = require('./models/userModel.js')
 const Message = require('./models/chatMessagesModel.js')
 
 var sessionMiddleware = session({

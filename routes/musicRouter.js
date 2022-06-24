@@ -7,7 +7,7 @@ const {MulterImage, MulterTrack} = require('../config/multer')
 const cloudinary = require('../config/cloudinaryConfig')
 
 const Music = require('../models/musicModel.js');
-const User = require('../models/userModel.js');
+const {User} = require('../models/userModel.js');
 
 const {isRole} = require('../middlewares/auth')
 
@@ -42,7 +42,7 @@ router.get('/getAll', (req,res)=>{
                 }
             }).limit(size).skip(skip)
         }
-        else res.status(400).send('Что-то пошло не так (')
+        else res.status(400).send('Пусто')
     })
 })
 //Получения коллекции
@@ -78,19 +78,30 @@ router.get('/getCollection', passport.authenticate('jwt', {session: false}),asyn
 router.get('/getTrackData/:id', async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
-
         Music.findOne({trackID: id}, async(err, doc)=>{
-            if(err)  res.status(404).send(err);
-            if(!doc) res.status(400).send('Запись не найдена');
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(400).send('Запись не найдена');
             if(doc){
-                // if(req?.user?.nickname){
-                //     User.findOneAndUpdate({nickname: req.user.nickname}, {$addToSet: {pref_genres: doc.tags}})
-                //     console.log(doc.tags)
-                // }
-                res.status(200).send(doc)
+                return res.status(200).send(doc)
             }
         })
     }
+})
+router.post('/setTimesListened', passport.authenticate('jwt', {session: false}), async (req, res)=>{
+    if(req.body.id){
+        const id = req.body.id
+        Music.findByIdAndUpdate(id, {$addToSet: {timesListened: req.user.nickname}},async(err, doc)=>{
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(400).send('Запись не найдена');
+            if(doc){
+                return res.status(200).send('ok')
+            }
+        })
+    }
+    else{
+        return res.status(404).send('ups')
+    }
+    
 })
 //Добавление
 router.post('/addTrack', passport.authenticate('jwt', {session: false}),

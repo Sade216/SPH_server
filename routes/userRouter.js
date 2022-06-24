@@ -1,12 +1,13 @@
+const Mongoose = require('mongoose')
 const router = require('express').Router()
 const passport = require('passport');
 require('../config/passportConfig')(passport)
 
-const User = require('../models/userModel.js');
+const {User} = require('../models/userModel.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken')
 
-const {updateData} = require('../middlewares/auth.js')
+const {updateData, isRole} = require('../middlewares/auth.js')
 
 const cloudinary = require('../config/cloudinaryConfig') 
 const {MulterImage, MulterTrack} = require('../config/multer')
@@ -156,11 +157,22 @@ async(req, res)=>{
 })
 //Удалить пост
 router.get('/deletePost/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
-    if(req.user?.nickname){
-        console.log(req.body)
-        return res.status(200).send('Ok')
+    if(req.params.id){
+        const id = req.params.id
+        User.findByIdAndUpdate(req.user._id, async(err, doc)=>{
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(200).send('Запись не найдена');
+            if(doc){
+                console.log(doc.posts)
+                return res.status(200).send('Ok')
+            }
+        })
+        
     }
 })
+//ЛАЙКИ
+
+
 //Поменять аватар
 router.post('/change_avatar', passport.authenticate('jwt', {session: false}), MulterImage.single('image'),  async (req, res)=>{
     User.findOne({nickname: req.user.nickname}, async (err, doc)=>{

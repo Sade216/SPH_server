@@ -20,10 +20,7 @@ const musicSchema = new Mongoose.Schema({
         type: String,
     },
     tags: [String],
-    timesListened: {
-        type: Number,
-        default: 0,
-    }
+    timesListened: [String],
 },
 {
     timestamps: true
