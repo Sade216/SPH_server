@@ -37,6 +37,7 @@ module.exports = function(passport){
                 pref_genres: user.pref_genres,
                 visitors: user.visitors,
                 trackList: user.trackList,
+                featuredList: user.featuredList,
                 followers: user.followers,
                 youFollow: user.youFollow,
             }

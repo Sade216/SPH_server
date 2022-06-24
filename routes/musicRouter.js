@@ -45,21 +45,6 @@ router.get('/getAll', (req,res)=>{
         else res.status(400).send('Пусто')
     })
 })
-//Получения коллекции
-router.get('/getCollection/:id', async(req, res)=>{
-    if(req.params.id){
-        const id = req.params.id
-
-        User.findOne({nickname: id}, null, {sort: {createdAt: -1}}, async(err, doc)=>{
-            if(err)  res.status(404).send(err);
-            if(!doc) res.status(400).send('Запись не найдена');
-            if(doc){
-                res.status(200).send(doc.trackList)
-                
-            }
-        })
-    }
-})
 //Получение коллекции для авторизованного пользователя
 router.get('/getCollection', passport.authenticate('jwt', {session: false}),async(req, res)=>{
     if(req.user.nickname){
@@ -74,11 +59,71 @@ router.get('/getCollection', passport.authenticate('jwt', {session: false}),asyn
         })
     }
 })
+//Получение коллекции для авторизованного пользователя
+router.get('/getFeaturedList', passport.authenticate('jwt', {session: false}),async(req, res)=>{
+    if(req.user.nickname){
+        User.findOne({nickname: req.user.nickname}, null, {sort: {createdAt: -1}}, async(err, doc)=>{
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(400).send('Запись не найдена');
+            if(doc){
+                return res.status(200).send(doc.featuredList)
+            }
+        })
+    }
+})
+
+router.get('/isFeatured/:id', passport.authenticate('jwt', {session: false}),async(req, res)=>{
+    if(req.params.id){
+        const id = req.params.id
+
+        User.findById(req.user._id, async(err, doc)=>{
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(400).send('Запись не найдена');
+            if(doc){
+                if(doc.featuredList.includes(id)){
+                    return res.status(200).send(true)
+                }
+                else{
+                    return res.status(200).send(false)
+                }
+            }
+        })
+    }
+})
+
+router.get('/addToFeatured/:id', passport.authenticate('jwt', {session: false}),async(req, res)=>{
+    if(req.params.id){
+        const id = req.params.id
+
+        User.findByIdAndUpdate(req.user._id, {$addToSet: {featuredList: id}}, {new: true}, async(err, doc)=>{
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(400).send('Запись не найдена');
+            if(doc){
+                return res.status(200).send(true)
+            }
+        })
+    }
+})
+
+router.get('/deleteFromFeatured/:id', passport.authenticate('jwt', {session: false}),async(req, res)=>{
+    if(req.params.id){
+        const id = req.params.id
+
+        User.findByIdAndUpdate(req.user._id, {$pull: {featuredList: id}}, {new: true}, async(err, doc)=>{
+            if(err)  return res.status(404).send(err);
+            if(!doc) return res.status(400).send('Запись не найдена');
+            if(doc){
+                return res.status(200).send(false)
+            }
+        })
+    }
+})
+
 //Получения данных о треке
 router.get('/getTrackData/:id', async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
-        Music.findOne({trackID: id}, async(err, doc)=>{
+        Music.findById(id, async(err, doc)=>{
             if(err)  return res.status(404).send(err);
             if(!doc) return res.status(400).send('Запись не найдена');
             if(doc){

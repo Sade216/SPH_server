@@ -34,6 +34,7 @@ const userSchema = new Mongoose.Schema({
         default: null,
     },
     trackList: [String],
+    featuredList: [String],
     pref_genres: [String],
     visitors: [String],
     followers: [String],
