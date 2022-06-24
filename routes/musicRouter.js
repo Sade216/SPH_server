@@ -54,7 +54,6 @@ router.get('/getCollection', passport.authenticate('jwt', {session: false}),asyn
             if(!doc) res.status(400).send('Запись не найдена');
             if(doc){
                 res.status(200).send(doc.trackList)
-                
             }
         })
     }
@@ -71,7 +70,6 @@ router.get('/getFeaturedList', passport.authenticate('jwt', {session: false}),as
         })
     }
 })
-
 router.get('/isFeatured/:id', passport.authenticate('jwt', {session: false}),async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
@@ -109,7 +107,7 @@ router.get('/deleteFromFeatured/:id', passport.authenticate('jwt', {session: fal
     if(req.params.id){
         const id = req.params.id
 
-        User.findByIdAndUpdate(req.user._id, {$pull: {featuredList: id}}, {new: true}, async(err, doc)=>{
+        User.findOneAndUpdate(req.user._id, {$pull: {featuredList: id}}, {new: true}, async(err, doc)=>{
             if(err)  return res.status(404).send(err);
             if(!doc) return res.status(400).send('Запись не найдена');
             if(doc){
@@ -118,12 +116,11 @@ router.get('/deleteFromFeatured/:id', passport.authenticate('jwt', {session: fal
         })
     }
 })
-
 //Получения данных о треке
 router.get('/getTrackData/:id', async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
-        Music.findById(id, async(err, doc)=>{
+        Music.findOne({trackID: id}, async(err, doc)=>{
             if(err)  return res.status(404).send(err);
             if(!doc) return res.status(400).send('Запись не найдена');
             if(doc){
