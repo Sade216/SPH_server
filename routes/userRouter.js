@@ -124,13 +124,13 @@ router.get('/getPosts/:id', async(req, res)=>{
         const limit = parseInt(size)
         const skip = (page - 1) * size;
 
-        User.findOne({nickname: id}, async(err, doc)=>{
+        User.findOne({nickname: id}, null, {sort: {createdAt: -1}}, async(err, doc)=>{
             if(err)  return res.status(404).send(err);
             if(!doc) return res.status(200).send('Запись не найдена');
             if(doc){
-                let posts = doc.posts.slice(skip, limit + skip)
+                let posts = doc.posts?.slice(skip, limit + skip)
                 return res.status(200).send({
-                    pages: Math.ceil(doc.posts.length/size),
+                    pages: Math.ceil(doc.posts?.length/size),
                     data: posts,
                 })
             }
@@ -159,11 +159,10 @@ async(req, res)=>{
 router.get('/deletePost/:id', passport.authenticate('jwt', {session: false}), async(req, res)=>{
     if(req.params.id){
         const id = req.params.id
-        User.findByIdAndUpdate(req.user._id, async(err, doc)=>{
+        User.findByIdAndUpdate(req.user._id, {$pull: {posts: {_id: Mongoose.Types.ObjectId(id)}}}, {new: true},async(err, doc)=>{
             if(err)  return res.status(404).send(err);
             if(!doc) return res.status(200).send('Запись не найдена');
             if(doc){
-                console.log(doc.posts)
                 return res.status(200).send('Ok')
             }
         })
